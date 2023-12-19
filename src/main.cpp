@@ -529,7 +529,7 @@ namespace mynamespace
 	}
 
 	// std::string lteDLReceiver() {
-	int main()
+	int main(int arg, char* args[])
 	{
 		std::string filename = "../regression_test_signal_file/f1815.3_s19.2_bw20_0.08s_hackrf-1.bin";
 		double gain1 = -1;

@@ -40,7 +40,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -63,7 +63,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -86,7 +86,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -109,7 +109,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -132,7 +132,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -155,7 +155,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -178,7 +178,7 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}"
+                "-I${fileDirname}/include",
             ],
             "options": {
                 "cwd": "${fileDirname}"
