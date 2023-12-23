@@ -1,184 +1,27 @@
 {
     "tasks": [
-        // {
-        //     "type": "cppbuild",
-        //     "label": "C/C++: g++ build active file",
-        //     "command": "/usr/bin/g++",
-        //     "args": [
-        //         "-g",
-        //         "${file}",
-        //         // "${fileDirname}/*.cpp",
-        //         "-o",
-        //         "${fileDirname}/${fileBasenameNoExtension}",
-        //         "-litpp",
-        //         "-lncurses",
-        //         "-L/usr/include",
-        //         "-I/usr/include",
-        //         "-I${fileDirname}/include",
-        //     ],
-        //     "options": {
-        //         "cwd": "${fileDirname}"
-        //     },
-        //     "problemMatcher": [
-        //         "$gcc"
-        //     ],
-        //     "group": {
-        //         "kind": "build",
-        //         "isDefault": true
-        //     },
-        // },
         {
             "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/common.cpp",
-                "-o",
-                "${fileDirname}/common.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/constants.cpp",
-                "-o",
-                "${fileDirname}/constants.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/dsp.cpp",
-                "-o",
-                "${fileDirname}/dsp.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/itpp_ext.cpp",
-                "-o",
-                "${fileDirname}/itpp_ext.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/lte_lib.cpp",
-                "-o",
-                "${fileDirname}/lte_lib.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
-            "args": [
-                "-c",
-                "${fileDirname}/utils.cpp",
-                "-o",
-                "${fileDirname}/utils.o",
-                "-litpp",
-                "-lncurses",
-                "-L/usr/include",
-                "-I/usr/include",
-                "-I${fileDirname}/include",
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
+            "label": "build",
             "command": "/usr/bin/g++",
             "args": [
                 "-g",
-                "${file}",
+                "${workspaceFolder}/src/main.cpp",
+                "${workspaceFolder}/src/utils.cpp",
+                "${workspaceFolder}/src/searcher.cpp",
+                "${workspaceFolder}/src/lte_lib.cpp",
+                "${workspaceFolder}/src/itpp_ext.cpp",
+                "${workspaceFolder}/src/constants.cpp",
+                "${workspaceFolder}/src/common.cpp",
+                "${workspaceFolder}/src/macros.cpp",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
                 "-litpp",
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
-                "-I${fileDirname}/include",
+                "-I${workspaceFolder}/include",
+                "-L${workspaceFolder}/src"
             ],
             "options": {
                 "cwd": "${fileDirname}"
@@ -187,6 +30,29 @@
                 "$gcc"
             ],
             "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ build active file",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Task generated by Debugger."
         }
     ],
     "version": "2.0.0"
