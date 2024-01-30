@@ -8,7 +8,7 @@
                 "-g",
                 "${workspaceFolder}/src/main.cpp",
                 "${workspaceFolder}/src/utils.cpp",
-                "${workspaceFolder}/src/searcher.cpp",
+                // "${workspaceFolder}/src/searcher.cpp",
                 "${workspaceFolder}/src/lte_lib.cpp",
                 "${workspaceFolder}/src/itpp_ext.cpp",
                 "${workspaceFolder}/src/constants.cpp",
@@ -20,6 +20,8 @@
                 "-lncurses",
                 "-L/usr/include",
                 "-I/usr/include",
+                // "-L/usr/local/include",
+                // "-I/usr/local/include",
                 "-I${workspaceFolder}/include",
                 "-L${workspaceFolder}/src"
             ],

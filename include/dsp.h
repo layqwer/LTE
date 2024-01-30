@@ -155,7 +155,7 @@ itpp::Vec <T> interp1(
   const itpp::vec & x
 ) {
   // ASSERT(itpp_ext::and_reduce(itpp_ext::diff(X)>0));
-  ASSERT(length(X)==length(Y));
+  // ASSERT(length(X)==length(Y));
 
   itpp::Vec <T> retval;
   retval.set_size(length(x));

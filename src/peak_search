@@ -1,0 +1,148 @@
+// void peak_search(
+// 	// Inputs
+// 	mat &xc_incoherent_collapsed_pow,
+// 	vector<ivec> &xc_incoherent_collapsed_frq,
+// 	const vec &Z_th1,
+// 	const vec &f_search_set,
+// 	double fc,
+// 	int sampling_carrier_twist,
+
+// 	// Outputs
+// 	list<Cell> &cells)
+// {
+// 	// pss_xc_matrix=udb10([NaN -8 -8; -8 NaN -8; -8 -8 NaN]);//todo:
+// 	// Create local copy we can write to and destroy.
+// 	mat xc_incoherent_working(xc_incoherent_collapsed_pow);
+
+// 	for (;;)
+// 	{
+// 		// Search for the largest peak. (Not the largest peak relative to
+// 		// the detection threshold Z_th1.)
+// 		ivec peak_ind;
+// 		vec peak_pow = max(transpose(xc_incoherent_working), peak_ind);
+// 		int peak_n_id_2;
+// 		double peak_pow_v = max(peak_pow, peak_n_id_2);
+// 		peak_n_id_2 -= 1;
+// 		int peak_ind_v = peak_ind(peak_n_id_2);
+
+// 		if (peak_pow_v < Z_th1[peak_ind_v])
+// 		{
+// 			// This peak has too low of a received power. There are no more
+// 			// interesting peaks. Break!
+// 			break;
+// 		}
+// 		//    cout << "peak_search " << peak_pow << " " << peak_ind << " " << Z_th1(peak_ind) << "\n";
+
+// 		// A peak was found at location peak_ind and has frequency index
+// 		// xc_incoherent_collapsed_frq(peak_n_id_2,peak_ind). This peak
+// 		// is the sum of the energy within ds_comb_arm samples around this
+// 		// peak location. From the samples within ds_comb_arm samples
+// 		// around peak_ind, find the index with the highest power.
+// 		// double best_pow = -INFINITY;
+// 		// size_t best_ind = -1;
+// 		// for (size_t t = peak_ind - 2; t <= peak_ind + 2; t++)
+// 		// {
+// 		// 	size_t t_wrap = mod(t, 9600);
+// 		// 	if (xc_incoherent_single[peak_n_id_2](xc_incoherent_collapsed_frq(peak_n_id_2, peak_ind), t_wrap) > best_pow)
+// 		// 	{
+// 		// 		best_pow = xc_incoherent_single[peak_n_id_2](xc_incoherent_collapsed_frq(peak_n_id_2, peak_ind), t_wrap);
+// 		// 		best_ind = t_wrap;
+// 		// 	}
+// 		// }
+
+// 		// Record this peak for further processing
+// 		Cell cell;
+// 		// cell.fc_requested = fc_requested;
+// 		// cell.fc_programmed = fc_programmed;
+// 		cell.pss_pow = peak_pow_v;
+// 		cell.ind = peak_ind_v;
+// 		cell.freq = f_search_set(xc_incoherent_collapsed_frq[peak_n_id_2][peak_ind_v]);
+// 		cell.n_id_2 = peak_n_id_2;
+
+// 		if (sampling_carrier_twist)
+// 		{
+// 			//      cell.k_factor = (fc_requested-cell.freq)/fc_programmed;
+// 			cell.k_factor = (fc - cell.freq) / fc;
+// 		}
+// 		else
+// 		{
+// 			// cell.k_factor = k_factor;
+// 		}
+
+// 		cells.push_back(cell); // for tdd test
+// 		cells.push_back(cell); // for fdd test
+
+// 		int n = 137 * 4;
+// 		ivec tmp = peak_ind(peak_pow_v - 137 * 2, peak_pow_v + 137 * 2);
+// 		ivec cancel(n);
+// 		for (int i = 0; i < n; ++i)
+// 		{
+// 			cancel[i] = (tmp[i] - 1) % (9601 - 1) + 1;
+// 		}
+// 		for (size_t i = 0; i < cancel.size(); i++)
+// 		{
+// 			xc_incoherent_working.set(peak_n_id_2, cancel[i], 0);
+// 		}
+// 		mat t("0 -8 -8;-8 0 -8;-8 -8 0");
+// 		mat pss_xc_matrix = udb10(t);
+// 		for (int t = 0; t <= 2; ++t)
+// 		{
+// 			if (t != peak_n_id_2)
+// 			{
+// 				for (int i = 0; i < xc_incoherent_working.size(); ++i)
+// 				{
+// 					if (xc_incoherent_working.get(i) < peak_pow_v * pss_xc_matrix.get(peak_n_id_2 + 1, t + 1))
+// 					{
+// 						xc_incoherent_working.set(i, 0);
+// 					}
+// 				}
+// 			}
+// 		}
+
+// 		for
+// 			t = setdiff(0 : 2, peak_n_id_2)
+// 				xc_incoherent_working(t + 1, cancel(xc_incoherent_working(t + 1, cancel) < peak_pow * pss_xc_matrix(peak_n_id_2 + 1, t + 1))) = 0;
+// 		end
+// 			xc_incoherent_working(xc_incoherent_working < peak_pow * udb10(-12)) = 0;
+
+// 		// // Cancel out the false peaks around this one.
+// 		// // No peaks with the same pss sequence are allowed within 274 samples of
+// 		// // this one.
+// 		// for (int t = -274; t <= 274; t++)
+// 		// {
+// 		// 	// cout <<mod(peak_ind+t,9600)<<endl;
+// 		// 	xc_incoherent_working(peak_n_id_2, itpp_ext::matlab_mod(peak_ind_v + t, 9600)) = 0;
+// 		// }
+// 		// // Cancel out other PSS sequences whose power is within 8dB of the current
+// 		// // sequence.
+// 		// double thresh = peak_pow_v * udb10(-8.0);
+// 		// for (size_t n = 0; n <= 3; n++)
+// 		// {
+// 		// 	if (n == peak_n_id_2)
+// 		// 	{
+// 		// 		continue;
+// 		// 	}
+// 		// 	for (int t = -274; t <= 274; t++)
+// 		// 	{
+// 		// 		if (xc_incoherent_working(peak_n_id_2, itpp_ext::matlab_mod(peak_ind_v + t, 9600)) < thresh)
+// 		// 		{
+// 		// 			xc_incoherent_working(peak_n_id_2, itpp_ext::matlab_mod(peak_ind_v + t, 9600)) = 0;
+// 		// 		}
+// 		// 	}
+// 		// }
+// 		// // Because of the repetitive nature of the CRS, a PSS at offset I with power
+// 		// // P will produce correlation peaks during all CRS OFDM symbols with power
+// 		// // approximately P-14dB. Cancel them out.
+// 		// thresh = peak_pow_v * udb10(-12.0);
+// 		// for (size_t r = 0; r < 3; r++)
+// 		// {
+// 		// 	for (size_t c = 0; c < 9600; c++)
+// 		// 	{
+// 		// 		if (xc_incoherent_working(r, c) < thresh)
+// 		// 		{
+// 		// 			xc_incoherent_working(r, c) = 0;
+// 		// 		}
+// 		// 	}
+// 		// }
+// 	}
+// }
