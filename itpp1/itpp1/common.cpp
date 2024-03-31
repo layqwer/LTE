@@ -18,7 +18,6 @@
 #include <itpp/itbase.h>
 // #include <boost/math/special_functions/gamma.hpp>
 #include "common.h"
-#include "itpp_ext.h"
 #include "dsp.h"
 
 #ifdef HAVE_RTLSDR
@@ -37,10 +36,10 @@ using namespace std;
 
 // Cell class member functions
 int16 const Cell::n_id_cell() const {
-  return ((n_id_1>=0)&&(n_id_2>=0))?(n_id_2+3*n_id_1):-1;
+  return n_id_1>=0&&n_id_2>=0?n_id_2+3*n_id_1:-1;
 }
 int8 const Cell::n_symb_dl() const {
-  return (cp_type==cp_type_t::NORMAL)?7:((cp_type==cp_type_t::EXTENDED)?6:-1);
+  return cp_type==cp_type_t::NORMAL?7:cp_type==cp_type_t::EXTENDED?6:-1;
 }
 // Default constructor initializes structure to impossible values.
 Cell::Cell() :
@@ -72,7 +71,7 @@ ostream & operator<< (
   ostream & os,
   const Cell & c
 ) {
-  if (isnan(c.fc_requested)&&isnan(c.fc_programmed)&&isnan(c.pss_pow)&&(c.ind==-1)&&isnan(c.freq)&&(c.n_id_2==-1)) {
+  if (isnan(c.fc_requested)&&isnan(c.fc_programmed)&&isnan(c.pss_pow)&&c.ind==-1&&isnan(c.freq)&&c.n_id_2==-1) {
     os << "<EMPTY>";
     return os;
   }
@@ -83,7 +82,7 @@ ostream & operator<< (
   os << "freq = " << c.freq << endl;
   os << "n_id_2 = " << c.n_id_2;
 
-  if ((c.n_id_1==-1)&&(c.cp_type==cp_type_t::UNKNOWN)&&isnan(c.frame_start)&&isnan(c.freq_fine))
+  if (c.n_id_1==-1&&c.cp_type==cp_type_t::UNKNOWN&&isnan(c.frame_start)&&isnan(c.freq_fine))
     return os;
 
   os << endl;
@@ -104,7 +103,7 @@ ostream & operator<< (
   os << endl;
   os << "freq_superfine = " << c.freq_superfine;
 
-  if ((c.n_ports==-1)&&(c.n_rb_dl==-1)&&(c.phich_duration==phich_duration_t::UNKNOWN)&&(c.phich_resource==phich_resource_t::UNKNOWN)&&(c.sfn==-1))
+  if (c.n_ports==-1&&c.n_rb_dl==-1&&c.phich_duration==phich_duration_t::UNKNOWN&&c.phich_resource==phich_resource_t::UNKNOWN&&c.sfn==-1)
     return os;
 
   os << endl;

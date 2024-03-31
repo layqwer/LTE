@@ -55,7 +55,7 @@ bvec lte_pn(
   uint32 c_init_temp(c_init);
   for (uint8 t=0;t<31;t++) {
     x1(t)=0;
-    x2(t)=(c_init_temp&1);
+    x2(t)=c_init_temp&1;
     c_init_temp=c_init_temp>>1;
   }
   x1(0)=1;
@@ -140,8 +140,8 @@ bvec lte_pn(
     // Store output
     rv(t)=x1(0)+x2(0);
     // Advance state machines
-    bool x1_new=x1(0)+x1(3);
-    bool x2_new=x2(0)+x2(1)+x2(2)+x2(3);
+    const bool x1_new=x1(0)+x1(3);
+    const bool x2_new=x2(0)+x2(1)+x2(2)+x2(3);
     for (uint8 k=0;k<30;k++) {
       x1(k)=x1(k+1);
       x2(k)=x2(k+1);
@@ -162,7 +162,7 @@ bvec lte_pn(
 cvec pss_fd_calc(const uint8 & t) {
   const int zc_map_donotuse[3]={25,29,34};
   const vector <int> zc_map(zc_map_donotuse,zc_map_donotuse+3);
-  cvec r=exp((complex<double>(0,-1)*pi*zc_map[t]/63)*elem_mult(ivec("0:62"),ivec("1:63")));
+  cvec r=exp(complex<double>(0,-1)*pi*zc_map[t]/63*elem_mult(ivec("0:62"),ivec("1:63")));
   r.del(31);
   return r;
 }
@@ -236,14 +236,14 @@ ivec sss_fd_calc(
   ivec z_td("0 0 0 0 1 1 1 0 0 1 1 0 1 1 1 1 1 0 1 0 0 0 1 0 0 1 0 1 0 1 1");
   z_td=1-2*z_td;
 
-  ivec s0_m0=s_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(m0,30+m0),31));
-  ivec s1_m1=s_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(m1,30+m1),31));
+  const ivec s0_m0=s_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(m0,30+m0),31));
+  const ivec s1_m1=s_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(m1,30+m1),31));
 
-  ivec c0=c_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(n_id_2,30+n_id_2),31));
-  ivec c1=c_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(n_id_2+3,30+n_id_2+3),31));
+  const ivec c0=c_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(n_id_2,30+n_id_2),31));
+  const ivec c1=c_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(n_id_2+3,30+n_id_2+3),31));
 
-  ivec z1_m0=z_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(0,30)+itpp_ext::matlab_mod(m0,8),31));
-  ivec z1_m1=z_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(0,30)+itpp_ext::matlab_mod(m1,8),31));
+  const ivec z1_m0=z_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(0,30)+itpp_ext::matlab_mod(m0,8),31));
+  const ivec z1_m1=z_td(itpp_ext::matlab_mod(itpp_ext::matlab_range(0,30)+itpp_ext::matlab_mod(m1,8),31));
 
   ivec ssc1;
   ivec ssc2;
@@ -317,12 +317,12 @@ cvec rs_dl_calc(
   const cp_type_t::cp_type_t & cp_type
 ) {
   // Create c
-  const uint32 n_cp=(cp_type==cp_type_t::NORMAL);
+  const uint32 n_cp=cp_type==cp_type_t::NORMAL;
   const uint32 c_init=(1<<10)*(7*(slot_num+1)+sym_num+1)*(2*n_id_cell+1)+2*n_id_cell+n_cp;
   const ivec c=to_ivec(lte_pn(c_init,4*N_RB_MAXDL));
 
   // Create symbols to be used if n_rb_maxdl RB's were used on the DL.
-  cvec r_l_ns=(1/pow(2,0.5))*((1-2*c(itpp_ext::matlab_range(0,2,4*N_RB_MAXDL-1)))+J*(1-2*c(itpp_ext::matlab_range(1,2,4*N_RB_MAXDL-1))));
+  const cvec r_l_ns=1/pow(2,0.5)*(1-2*c(itpp_ext::matlab_range(0,2,4*N_RB_MAXDL-1))+J*(1-2*c(itpp_ext::matlab_range(1,2,4*N_RB_MAXDL-1))));
 
   // Select the appropriate subset of r_l_ns.
   cvec r=r_l_ns(N_RB_MAXDL-n_rb_dl,2*n_rb_dl+N_RB_MAXDL-n_rb_dl-1);
@@ -338,20 +338,20 @@ double rs_dl_shift_calc(
   const cp_type_t::cp_type_t & cp_type,
   const uint16 & n_id_cell
 ) {
-  uint8 n_symb_dl=(cp_type==cp_type_t::NORMAL)?7:6;
+	const uint8 n_symb_dl=cp_type==cp_type_t::NORMAL?7:6;
 
   double v=NAN;
-  if ((port_num==0)&&(sym_num==0))
+  if (port_num==0&&sym_num==0)
     v=0;
-  else if ((port_num==0)&&(sym_num==n_symb_dl-3))
+  else if (port_num==0&&sym_num==n_symb_dl-3)
     v=3;
-  else if ((port_num==1)&&(sym_num==0))
+  else if (port_num==1&&sym_num==0)
     v=3;
-  else if ((port_num==1)&&(sym_num==n_symb_dl-3))
+  else if (port_num==1&&sym_num==n_symb_dl-3)
     v=0;
-  else if ((port_num==2)&&(sym_num==1))
+  else if (port_num==2&&sym_num==1)
     v=3*(slot_num&1);
-  else if ((port_num==3)&&(sym_num==1))
+  else if (port_num==3&&sym_num==1)
     v=3+3*(slot_num&1);
 
   return mod(v+n_id_cell,6);
@@ -376,9 +376,9 @@ RS_DL::RS_DL(
   shift_table=NAN;
   for (uint8 slot_num=0;slot_num<20;slot_num++) {
     for (uint8 t=0;t<3;t++) {
-      uint8 sym_num=(t==2)?(n_symb_dl-3):t;
+      uint8 sym_num=t==2?n_symb_dl-3:t;
       table[slot_num*n_symb_dl+sym_num]=rs_dl_calc(slot_num,sym_num,n_id_cell,n_rb_dl,cp_type);
-      if ((t==0)||(t==2)) {
+      if (t==0||t==2) {
         shift_table(slot_num*n_symb_dl+sym_num,0)=rs_dl_shift_calc(slot_num,sym_num,0,cp_type,n_id_cell);
         shift_table(slot_num*n_symb_dl+sym_num,1)=rs_dl_shift_calc(slot_num,sym_num,1,cp_type,n_id_cell);
       } else {
@@ -479,9 +479,9 @@ mat lte_conv_deratematch(
 ) {
   // Probe lte_conv_ratematch to find out which bit came from where.
   // There are better ways to do this...
-  mat d_probe_real=repmat(itpp_ext::matlab_range(0.0,2.0),1,n_c,false);
-  mat d_probe_imag=repmat(itpp_ext::matlab_range(0.0,n_c-1.0),3,1,true);
-  cmat d_probe=to_cmat(d_probe_real,d_probe_imag);
+  const mat d_probe_real=repmat(itpp_ext::matlab_range(0.0,2.0),1,n_c,false);
+  const mat d_probe_imag=repmat(itpp_ext::matlab_range(0.0,n_c-1.0),3,1,true);
+  const cmat d_probe=to_cmat(d_probe_real,d_probe_imag);
   cvec e_probe=lte_conv_ratematch(d_probe,length(e_est));
 
   // Convert from probabilities to values along the x axis, assuming symbols
@@ -502,8 +502,8 @@ mat lte_conv_deratematch(
   imat d_x_count(3,n_c);
   d_x_count=0;
   for (int32 t=0;t<length(e_est);t++) {
-    uint8 r=real(e_probe(t));
-    uint32 c=imag(e_probe(t));
+	  const uint8 r=real(e_probe(t));
+	  const uint32 c=imag(e_probe(t));
     d_x(r,c)+=e_x(t);
     d_x_count(r,c)++;
   }
@@ -534,7 +534,7 @@ bmat lte_conv_encode(
   generator(2)=0165;
   coder.set_generator_polynomials(generator,7);
 
-  bvec d_vec=coder.encode_tailbite(c);
+  const bvec d_vec=coder.encode_tailbite(c);
   bmat d=reshape(d_vec,3,length(c));
   return d;
 }
@@ -552,7 +552,7 @@ bvec lte_conv_decode(
   generator(2)=0165;
   coder.set_generator_polynomials(generator,7);
 
-  vec d_est_v=cvectorize(d_est);
+  const vec d_est_v=cvectorize(d_est);
   bvec c_est=coder.decode_tailbite(d_est_v);
   return c_est;
 }
@@ -564,12 +564,12 @@ bvec lte_conv_decode(
 // This was implemented as a class so that the (slow) initialization only
 // needs to be done once, when the program starts.
 Mod_map::Mod_map(void) {
-  ivec map_qam_real("1 1 -1 -1");
-  ivec map_qam_imag("1 -1 1 -1");
-  ivec map_qam16_real("1 1 3 3 1 1 3 3 -1 -1 -3 -3 -1 -1 -3 -3");
-  ivec map_qam16_imag("1 3 1 3 -1 -3 -1 -3 1 3 1 3 -1 -3 -1 -3");
-  ivec map_qam64_real("3 3 1 1 3 3 1 1 5 5 7 7 5 5 7 7 3 3 1 1 3 3 1 1 5 5 7 7 5 5 7 7 -3 -3 -1 -1 -3 -3 -1 -1 -5 -5 -7 -7 -5 -5 -7 -7 -3 -3 -1 -1 -3 -3 -1 -1 -5 -5 -7 -7 -5 -5 -7 -7");
-  ivec map_qam64_imag("3 1 3 1 5 7 5 7 3 1 3 1 5 7 5 7 -3 -1 -3 -1 -5 -7 -5 -7 -3 -1 -3 -1 -5 -7 -5 -7 3 1 3 1 5 7 5 7 3 1 3 1 5 7 5 7 -3 -1 -3 -1 -5 -7 -5 -7 -3 -1 -3 -1 -5 -7 -5 -7");
+	const ivec map_qam_real("1 1 -1 -1");
+	const ivec map_qam_imag("1 -1 1 -1");
+	const ivec map_qam16_real("1 1 3 3 1 1 3 3 -1 -1 -3 -3 -1 -1 -3 -3");
+	const ivec map_qam16_imag("1 3 1 3 -1 -3 -1 -3 1 3 1 3 -1 -3 -1 -3");
+	const ivec map_qam64_real("3 3 1 1 3 3 1 1 5 5 7 7 5 5 7 7 3 3 1 1 3 3 1 1 5 5 7 7 5 5 7 7 -3 -3 -1 -1 -3 -3 -1 -1 -5 -5 -7 -7 -5 -5 -7 -7 -3 -3 -1 -1 -3 -3 -1 -1 -5 -5 -7 -7 -5 -5 -7 -7");
+	const ivec map_qam64_imag("3 1 3 1 5 7 5 7 3 1 3 1 5 7 5 7 -3 -1 -3 -1 -5 -7 -5 -7 -3 -1 -3 -1 -5 -7 -5 -7 3 1 3 1 5 7 5 7 3 1 3 1 5 7 5 7 -3 -1 -3 -1 -5 -7 -5 -7 -3 -1 -3 -1 -5 -7 -5 -7");
   table.set_size(3);
   table(0)=to_cvec(map_qam_real,map_qam_imag)/sqrt(2);
   table(1)=to_cvec(map_qam16_real,map_qam16_imag)/sqrt(10);
@@ -586,7 +586,7 @@ const itpp::cvec & Mod_map::operator()(
   } else if (mod==modulation_t::QAM64) {
     return table(2);
   } else {
-    throw("Check code!");
+    throw"Check code!";
   }
 };
 
@@ -603,11 +603,11 @@ cvec lte_modulate(
   } else if (modulation==modulation_t::QAM64) {
     bps=6;
   } else {
-    throw("Check code!!!");
+    throw"Check code!!!";
   }
   ASSERT(mod(length(bits),bps)==0);
 
-  Modulator <complex <double> > modulator(ROM_TABLES.mod_map(modulation),itpp_ext::matlab_range(0,(1<<bps)-1));
+  const Modulator <complex <double> > modulator(ROM_TABLES.mod_map(modulation),itpp_ext::matlab_range(0,(1<<bps)-1));
   cvec retval=modulator.modulate_bits(bits);
 
   return retval;
@@ -629,12 +629,12 @@ vec lte_demodulate(
   } else if (modulation==modulation_t::QAM64) {
     bps=6;
   } else {
-    throw("Check code!!!");
+    throw"Check code!!!";
   }
 
-  Modulator <complex <double> > modulator(ROM_TABLES.mod_map(modulation),itpp_ext::matlab_range(0,(1<<bps)-1));
+  const Modulator <complex <double> > modulator(ROM_TABLES.mod_map(modulation),itpp_ext::matlab_range(0,(1<<bps)-1));
 
-  cvec gain=1.0/to_cvec(sqrt(np));
+  const cvec gain=1.0/to_cvec(sqrt(np));
   vec retval=modulator.demodulate_soft_bits(elem_mult(syms,gain),gain,1);
 
   return retval;
@@ -655,7 +655,7 @@ bvec lte_calc_crc(
   } else if (crc==CRC24B) {
     poly=bvec("1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 1 1");
   } else {
-    throw("Check code...");
+    throw"Check code...";
   }
 
   // Set up the generator

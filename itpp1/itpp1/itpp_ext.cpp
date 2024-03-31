@@ -18,7 +18,6 @@
 #include <itpp/itbase.h>
 #include <sys/stat.h>
 #include <windows.h>
-#include <string.h>
 #include <stdlib.h>
 // #include <curses.h>
 #include "common.h"
@@ -46,9 +45,9 @@ using namespace std;
 //
 // This should only be used for debugging since it is not very fast.
 cvec flatten(const vcf3d & m) {
-  uint32 d1_len=m.size();
-  uint32 d2_len=m[0].size();
-  uint32 d3_len=m[0][0].size();
+	const uint32 d1_len=m.size();
+	const uint32 d2_len=m[0].size();
+	const uint32 d3_len=m[0][0].size();
 
   // Allocate space without initializing values.
   cvec r;
@@ -76,9 +75,9 @@ cvec flatten(const vcf3d & m) {
 // This should only be used for debugging since it is not very fast.
 // Code has been duplicated from flatten(vcf3d) ... :( :(
 vec flatten(const vf3d & m) {
-  uint32 d1_len=m.size();
-  uint32 d2_len=m[0].size();
-  uint32 d3_len=m[0][0].size();
+	const uint32 d1_len=m.size();
+	const uint32 d2_len=m[0].size();
+	const uint32 d3_len=m[0][0].size();
   //cout << d1_len << " " << d2_len << " " << d3_len << endl;
 
   // Allocate space without initializing values.
@@ -128,13 +127,13 @@ itpp::ivec matlab_range(const int32 first, const int32 incr, const int32 last) {
   //it_assert_debug(incr!=0,"increment is zero...");
   ASSERT(incr!=0,"increment is zero...");
   if (sign(last-first)*sign(incr)>=0) {
-    r.set_length(floor_i((last-first)/((double)incr))+1,false);
+    r.set_length(floor_i((last-first)/(double)incr)+1,false);
     for (int t=0;t<length(r);t++) {
       r(t)=first+t*incr;
     }
   }
-  //std::cout << first << incr << last << std::endl;
-  //std::cout << r << std::endl;
+  //std::cout << first << incr << last << "\n";
+  //std::cout << r << "\n";
   return r;
 }
 // Implement the matlab range notation a:b. Ex, 1:6 is [1 2 3 4 5 6].
@@ -148,7 +147,7 @@ itpp::ivec matlab_range(const uint32 first, const uint32 incr, const uint32 last
   //it_assert_debug(incr!=0,"increment is zero...");
   ASSERT(incr!=0,"increment is zero...");
   ASSERT(last>=first);
-  r.set_length(floor_i((last-first)/((double)incr))+1,false);
+  r.set_length(floor_i((last-first)/(double)incr)+1,false);
   for (int t=0;t<length(r);t++) {
     r(t)=first+t*incr;
   }
@@ -191,12 +190,12 @@ void rtl_sdr_to_cvec(
   // Get filesize
   struct stat filestatus;
   stat(filename.c_str(),&filestatus);
-  uint32 file_length=filestatus.st_size;
+  const uint32 file_length=filestatus.st_size;
   //cout << "file length: " << file_length << " bytes\n";
   if (floor(file_length/2.0)!=file_length/2.0) {
     cout << "Warning: file contains an odd number of samples" << endl;
   }
-  uint32 n_samp=floor(file_length/2.0);
+  const uint32 n_samp=floor(file_length/2.0);
 
   // Open file
   FILE *file;
@@ -208,7 +207,7 @@ void rtl_sdr_to_cvec(
 
   // Read entire file, all at once!
   uint8 * buffer=(uint8 *)malloc(n_samp*2*sizeof(uint8));
-  uint32 n_read=fread(buffer,1,n_samp*2,file);
+  const uint32 n_read=fread(buffer,1,n_samp*2,file);
   if (n_read!=2*n_samp) {
     cerr << "Error: error while reading file" << endl;
     exit(-1);
@@ -217,7 +216,7 @@ void rtl_sdr_to_cvec(
   // Convert to cvec
   v.set_size(n_samp);
   for (uint32 t=0;t<n_read-1;t+=2) {
-    complex <double> sample=complex <double>((buffer[t]-127.0)/128.0,(buffer[t+1]-127.0)/128.0);
+	  const complex <double> sample=complex <double>((buffer[t]-127.0)/128.0,(buffer[t+1]-127.0)/128.0);
     // Append to vector.
     v(t>>1)=sample;
   }

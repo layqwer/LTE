@@ -19,7 +19,7 @@
 #define HAVE_MACROS_H
 
 // Used for debugging. Simply prints an "I am here!" statement to cout.
-#define MARK std::cout << "Program execution has reached " << __FILE__ << " line: " << __LINE__ << std::endl
+#define MARK std::cout << "Program execution has reached " << __FILE__ << " line: " << __LINE__ << "\n"
 
 // Improved assert() macro. Takes one or two arguments.
 // Ex: ASSERT(n_r==3);
@@ -29,7 +29,7 @@
     do { \
         if (! (condition)) { \
             std::cerr << "Assertion (" #condition ") failed in '" << __FILE__ \
-                      << "' line " << __LINE__ << ": " << message << std::endl; \
+                      << "' line " << __LINE__ << ": " << message << "\n"; \
             std::exit(EXIT_FAILURE); \
         } \
     } while (false)

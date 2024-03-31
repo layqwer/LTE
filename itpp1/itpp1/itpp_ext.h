@@ -43,22 +43,22 @@ itpp::ivec matlab_range(const uint32 first, const uint32 last);
 // operate exactly like the matalab mod function on both integers and
 // floats.
 inline double matlab_mod(const double k,const double n) {
-  return (n==0)?k:(k-n*itpp::floor_i(k/n));
+  return n==0?k:k-n*itpp::floor_i(k/n);
 }
 inline double matlab_mod(const double k,const unsigned int n) {
-  return (n==0)?k:(k-n*itpp::floor_i(k/n));
+  return n==0?k:k-n*itpp::floor_i(k/n);
 }
 inline int matlab_mod(const int k,const int n) {
-  return (n==0)?k:(k-n*itpp::floor_i((double)k/n));
+  return n==0?k:k-n*itpp::floor_i((double)k/n);
 }
 inline unsigned int matlab_mod(const unsigned int k,const unsigned int n) {
-  return (n==0)?k:(k-n*itpp::floor_i((double)k/n));
+  return n==0?k:k-n*itpp::floor_i((double)k/n);
 }
 inline int matlab_mod(const unsigned int k,const int n) {
-  return (n==0)?k:(k-n*itpp::floor_i((double)k/n));
+  return n==0?k:k-n*itpp::floor_i((double)k/n);
 }
 inline unsigned int matlab_mod(const int k,const unsigned int n) {
-  return (n==0)?k:(k-n*itpp::floor_i((double)k/n));
+  return n==0?k:k-n*itpp::floor_i((double)k/n);
 }
 
 // mod() of a vector

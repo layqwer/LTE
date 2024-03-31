@@ -67,7 +67,6 @@
 #include "itpp_ext.h"
 #include "dsp.h"
 #include "searcher.h"
-#include "filter_coef.h"
 // #include "capbuf.h"
 
 #ifdef HAVE_RTLSDR
@@ -1513,12 +1512,12 @@ void xc_correlate_new(
   xc=vector < vector < vector < complex < float > > > > (3,vector< vector < complex < float > > >(len-(len_pss-1), vector < complex < float > > (len_f_search_set)));
 #endif
 
-  uint16 num_fo_pss = 3*len_f_search_set;
+  const uint16 num_fo_pss = 3*len_f_search_set;
 
   cvec chn_tmp(len_pss);
   cvec tmp(num_fo_pss);
-  for(uint32 i=0; i<(len - (len_pss-1)); i++) {
-    chn_tmp = capbuf(i, (i+len_pss-1));
+  for(uint32 i=0; i<len - (len_pss-1); i++) {
+    chn_tmp = capbuf(i, i+len_pss-1);
     tmp = pss_fo_set*chn_tmp;
     for(uint16 j=0; j<len_f_search_set; j++){
       xc[0][i][j]=tmp(j);
@@ -1737,7 +1736,7 @@ void xc_combine(
         // in samples, of a frame varies by the frequency offset.
         //double actual_time_offset=m*.005*k_factor;
         //double actual_start_index=itpp::round_i(actual_time_offset*FS_LTE/16);
-        double actual_start_index=itpp::round_i(m*.005*k_factor*fs_programmed);
+        const double actual_start_index=itpp::round_i(m*.005*k_factor*fs_programmed);
         for (uint16 idx=0;idx<9600;idx++) {
 //          xc_incoherent_single[t][idx][foi]+=sqr(xc[t][idx+actual_start_index][foi]);
           xc_incoherent_single[t](foi,idx)+=xc[t](foi, idx+actual_start_index);
@@ -1756,8 +1755,8 @@ mat circshift_mat_to_left(
   mat & a,
   const uint32 n
 ) {
-  uint num_col = a.cols() - n;
-  mat tmp_mat = a.get_cols(0, n-1);
+	const uint num_col = a.cols() - n;
+	const mat tmp_mat = a.get_cols(0, n-1);
   a.set_cols(0, a.get_cols(n, a.cols()-1));
   a.set_cols(num_col, tmp_mat);
   return a;
@@ -1767,8 +1766,8 @@ mat circshift_mat_to_right(
   mat & a,
   const uint32 n
 ) {
-  uint num_col = a.cols() - n;
-  mat tmp_mat = a.get_cols(num_col, a.cols()-1);
+	const uint num_col = a.cols() - n;
+	const mat tmp_mat = a.get_cols(num_col, a.cols()-1);
   a.set_cols(n, a.get_cols(0, num_col-1));
   a.set_cols(0, tmp_mat);
   return a;
@@ -1869,7 +1868,7 @@ void xc_peak_freq(
 //        }
 //      }
       int best_idx;
-      double best_pow = max(xc_incoherent[t].get_col(k), best_idx);
+const double best_pow = max(xc_incoherent[t].get_col(k), best_idx);
 
       xc_incoherent_collapsed_pow(t,k)=best_pow;
       xc_incoherent_collapsed_frq(t,k)=best_idx;
@@ -1882,12 +1881,12 @@ void normalize(
   // Input&Output
   cvec & s
 ) {
-  uint32 len = length(s);
+	const uint32 len = length(s);
 //  double acc = 0;
 //  for( uint32 i=0; i<len; i++){
 //    acc = acc + real(s(i)*conj(s(i)));
 //  }
-  double acc = sum( real(elem_mult(s, conj(s))) );
+	const double acc = sum( real(elem_mult(s, conj(s))) );
   s = sqrt(len)*s/sqrt(acc);
 }
 
@@ -1898,9 +1897,9 @@ void filter_my_fft(
   //Inputs&Outputs
   cvec & capbuf
 ) {
-  uint32 len = length(capbuf);
-  uint16 len_fir = length(coef);
-  uint16 len_half = (len_fir-1)/2;
+	const uint32 len = length(capbuf);
+	const uint16 len_fir = length(coef);
+	const uint16 len_half = (len_fir-1)/2;
 
   vec tmpbufin_re(len+len_fir-1);
   vec tmpbufin_im(len+len_fir-1);
@@ -1931,9 +1930,9 @@ void filter_my(
   //Inputs&Outputs
   cvec & capbuf
 ) {
-  uint32 len = length(capbuf);
-  uint16 len_fir = length(coef);
-  uint16 len_half = (len_fir-1)/2;
+	const uint32 len = length(capbuf);
+	const uint16 len_fir = length(coef);
+	const uint16 len_half = (len_fir-1)/2;
 //  cout << len_half << "\n";
   complex <double> acc;
 
@@ -1942,7 +1941,7 @@ void filter_my(
   // to conform matlab filter
   for (uint32 i=len_half; i<len_fir; i++) {
     acc=0;
-    for (uint16 j=0; j<(i+1); j++){
+    for (uint16 j=0; j<i+1; j++){
       acc = acc + coef[j]*capbuf[i-j];
     }
     tmpbuf[i-len_half] = acc;
@@ -1956,9 +1955,9 @@ void filter_my(
     tmpbuf[i-len_half] = acc;
   }
 
-  for (uint32 i=len; i<(len+len_half); i++) {
+  for (uint32 i=len; i<len+len_half; i++) {
     acc=0;
-    for (uint16 j=(i-len+1); j<len_fir; j++){
+    for (uint16 j=i-len+1; j<len_fir; j++){
       acc = acc + coef[j]*capbuf[i-j];
     }
     tmpbuf[i-len_half] = acc;
@@ -1981,8 +1980,8 @@ void pss_fix_location_corr(
   ivec & hit_time_idx,
   vec & max_val
 ){
-  uint16 len_pss = length( ROM_TABLES.pss_td[0] );
-  uint16 num_fo_pss = length(hit_pss_fo_set_idx);
+	const uint16 len_pss = length( ROM_TABLES.pss_td[0] );
+	const uint16 num_fo_pss = length(hit_pss_fo_set_idx);
 
   vec tmp(num_fo_pss);
   mat corr_store(end_position-start_position+1, num_fo_pss);
@@ -1990,7 +1989,7 @@ void pss_fix_location_corr(
   cvec chn_tmp(len_pss);
 
   for(int32 i=start_position; i<=end_position; i++) {
-    chn_tmp = s(i, (i+len_pss-1));
+    chn_tmp = s(i, i+len_pss-1);
     normalize(chn_tmp);
 
 //    for (uint16 j=0; j<num_fo_pss; j++){
@@ -2029,12 +2028,12 @@ void pss_moving_corr(
   ivec & hit_time_idx,
   vec & hit_corr_val
 ) {
-  uint16 num_pss = 3;
-  uint16 len_pss = length( ROM_TABLES.pss_td[0] );
-  uint16 num_fo_pss = num_pss*length( f_search_set );
+	const uint16 num_pss = 3;
+	const uint16 len_pss = length( ROM_TABLES.pss_td[0] );
+	const uint16 num_fo_pss = num_pss*length( f_search_set );
 
-  uint32 len = length(s);
-  uint32 len_half_store = 64;
+	const uint32 len = length(s);
+	const uint32 len_half_store = 64;
   mat corr_store(2*len_half_store+1, num_fo_pss);
   corr_store.zeros();
 
@@ -2052,8 +2051,8 @@ void pss_moving_corr(
 //  cout << size(pss_fo_set, 1) << "\n";
   cvec chn_tmp(len_pss);
   vec tmp(num_fo_pss);
-  for(uint32 i=0; i<(len - (len_pss-1)); i++) {
-    chn_tmp = s(i, (i+len_pss-1));
+  for(uint32 i=0; i<len - (len_pss-1); i++) {
+    chn_tmp = s(i, i+len_pss-1);
     normalize(chn_tmp);
 
 //    for (uint16 j=0; j<num_fo_pss; j++){
@@ -2085,7 +2084,7 @@ void pss_moving_corr(
 //    for (uint16 k=0; k<num_fo_pss; k++){
 //      acc = acc + (tmp(k)>th?1:0);
 //    }
-    uint16 acc = sum(to_ivec(tmp>th));
+    const uint16 acc = sum(to_ivec(tmp>th));
     if (acc) {
 //      cout << tmp << "\n";
       current_idx = i;
@@ -2097,11 +2096,11 @@ void pss_moving_corr(
   if (end_idx != -1){
     double tmp_val;
     int tmpi;
-    tmpi = (len - (len_pss-1))-1;
-    int32 last_idx = end_idx>tmpi?tmpi:end_idx;
+    tmpi = len - (len_pss-1)-1;
+    const int32 last_idx = end_idx>tmpi?tmpi:end_idx;
 
-    for (int32 i=(current_idx+1); i<(last_idx+1); i++ ){
-      chn_tmp = s(i, (i+len_pss-1));
+    for (int32 i=current_idx+1; i<last_idx+1; i++ ){
+      chn_tmp = s(i, i+len_pss-1);
       normalize(chn_tmp);
 
 //      for (uint16 j=0; j<num_fo_pss; j++){
@@ -2141,7 +2140,7 @@ void pss_moving_corr(
       if (max_val(k)<tmp_val)
         break;
     }
-    int16 num_valid = (k==num_fo_pss)?num_fo_pss:k;
+    const int16 num_valid = k==num_fo_pss?num_fo_pss:k;
 //    if (k==num_fo_pss){
 //      num_valid = num_fo_pss;
 //    }
@@ -2150,8 +2149,8 @@ void pss_moving_corr(
 //    }
 //    cout << num_valid << "\n";
 
-    hit_pss_fo_set_idx = sort_idx(0,(num_valid-1));
-    hit_corr_val = max_val(0,(num_valid-1));
+    hit_pss_fo_set_idx = sort_idx(0,num_valid-1);
+    hit_corr_val = max_val(0,num_valid-1);
     hit_time_idx = last_idx - max_idx.get(hit_pss_fo_set_idx);
 //    hit_pss_fo_set_idx.set_length(num_valid, false);
 //    hit_time_idx.set_length(num_valid, false);
@@ -2180,8 +2179,8 @@ void conv_capbuf_with_pss(
 
   cvec tmp(num_fo_pss);
   cvec chn_tmp(len_pss);
-  for(uint32 i=0; i<(len - (len_pss-1)); i++) {
-    chn_tmp = s(i, (i+len_pss-1));
+  for(uint32 i=0; i<len - (len_pss-1); i++) {
+    chn_tmp = s(i, i+len_pss-1);
     tmp = pss_fo_set*chn_tmp;
     corr_store.set_col(i, real( elem_mult( tmp,conj(tmp) )) );
   }
@@ -2194,20 +2193,20 @@ void pss_fo_set_gen(
   // Output
   cmat & pss_fo_set
 ){
-  uint16 num_pss = 3;
-  uint16 len_pss = length(ROM_TABLES.pss_td[0]);
+	const uint16 num_pss = 3;
+	const uint16 len_pss = length(ROM_TABLES.pss_td[0]);
 
-  double sampling_rate = FS_LTE/16; // LTE spec
-  uint16 num_fo = length(fo_search_set);
-  uint32 num_fo_pss = num_fo*num_pss;
+	const double sampling_rate = FS_LTE/16; // LTE spec
+	const uint16 num_fo = length(fo_search_set);
+	const uint32 num_fo_pss = num_fo*num_pss;
   cvec temp(len_pss);
 
   pss_fo_set.set_size(num_fo_pss, len_pss, false);
   for (uint32 fo_pss_i=0; fo_pss_i<num_fo_pss; fo_pss_i++) {
-    uint32 pssi = fo_pss_i/num_fo;
-    uint32 foi = fo_pss_i - pssi*num_fo;
+	  const uint32 pssi = fo_pss_i/num_fo;
+	  const uint32 foi = fo_pss_i - pssi*num_fo;
 
-    double f_off = fo_search_set(foi);
+	  const double f_off = fo_search_set(foi);
     temp = ROM_TABLES.pss_td[pssi];
     temp = fshift(temp,f_off,sampling_rate);
     temp = conj(temp)/len_pss; // align to latest matlab algorithm
@@ -2284,7 +2283,7 @@ void sampling_ppm_f_search_set_by_pss(
     return;
   }
 
-  cout << "\ninput level: avg abs(real) " << ( sum( abs(real(s)) )/len ) << " avg abs(imag) " << ( sum( abs(imag(s)) )/len ) << "\n";
+  cout << "\ninput level: avg abs(real) " << sum( abs(real(s)) )/len << " avg abs(imag) " << sum( abs(imag(s)) )/len << "\n";
 
   const uint32 pss_period = 19200/2;
 
@@ -2379,7 +2378,7 @@ void sampling_ppm_f_search_set_by_pss(
     uint16 peak_count = 0;
     int tmp_idx;
     for (uint32 j=tmp_max_idx; j<len_short; j=j+pss_period) {
-      if ( (j+3+num_half_radioframe) <len_short) {
+      if ( j+3+num_half_radioframe <len_short) {
         tmp_val = max(corr_seq(j-3-num_half_radioframe, j+3+num_half_radioframe), tmp_idx);
         peak_location = j-3-num_half_radioframe+tmp_idx;
         if (tmp_idx != 0 && tmp_idx != 2*(3+(int)num_half_radioframe)) {
@@ -2394,7 +2393,7 @@ void sampling_ppm_f_search_set_by_pss(
           peak_right = peak_right - peak_base;
           sum_peak = tmp_val + peak_left + peak_right;
 
-          peak_location = ( (peak_location-1)*peak_left/sum_peak ) + ( peak_location*tmp_val/sum_peak ) + ( (peak_location+1)*peak_right/sum_peak );
+          peak_location = (peak_location-1)*peak_left/sum_peak + peak_location*tmp_val/sum_peak + (peak_location+1)*peak_right/sum_peak;
         }
         else {
           peak_val[peak_count] = 0;
@@ -2542,8 +2541,8 @@ void peak_search(
     ivec peak_ind_v;
     vec peak_pow_v=max(transpose(xc_incoherent_working),peak_ind_v);
     int32 peak_n_id_2;
-    double peak_pow=max(peak_pow_v,peak_n_id_2);
-    int32 peak_ind=peak_ind_v(peak_n_id_2);
+    const double peak_pow=max(peak_pow_v,peak_n_id_2);
+    const int32 peak_ind=peak_ind_v(peak_n_id_2);
     if (peak_pow<Z_th1(peak_ind)) {
       // This peak has too low of a received power. There are no more
       // interesting peaks. Break!
@@ -2559,7 +2558,7 @@ void peak_search(
     double best_pow=-INFINITY;
     int16 best_ind=-1;
     for (uint16 t=peak_ind-ds_comb_arm;t<=peak_ind+ds_comb_arm;t++) {
-      uint16 t_wrap=mod(t,9600);
+	    const uint16 t_wrap=mod(t,9600);
       if (xc_incoherent_single[peak_n_id_2](xc_incoherent_collapsed_frq(peak_n_id_2,peak_ind),t_wrap)>best_pow) {
         best_pow=xc_incoherent_single[peak_n_id_2](xc_incoherent_collapsed_frq(peak_n_id_2,peak_ind),t_wrap);
         best_ind=t_wrap;
@@ -2636,7 +2635,7 @@ inline cvec extract_psss(
   // Remove the 2 sample time offset
   dft_in=concat(dft_in(2,-1),dft_in.left(2));
   // DFT
-  cvec dft_out=dft(dft_in);
+  const cvec dft_out=dft(dft_in);
   // Extract interesting samples.
   return concat(dft_out.right(31),dft_out.mid(1,31));
 }
@@ -2778,12 +2777,12 @@ double sss_detect_ml_helper(
   cvec sss_h12_try(to_cvec(sss_h12_try_orig));
 
   // Compensate for phase errors between the est and try sequences
-  double ang=arg(sum(elem_mult(conj(sss_h12_est),sss_h12_try)));
+  const double ang=arg(sum(elem_mult(conj(sss_h12_est),sss_h12_try)));
   sss_h12_try*=exp(J*-ang);
 
   // Calculate the log likelihood
-  cvec diff=sss_h12_try-sss_h12_est;
-  double log_lik=-sum(elem_div(elem_mult(real(diff),real(diff)),sss_h12_np_est))-sum(elem_div(elem_mult(imag(diff),imag(diff)),sss_h12_np_est));
+  const cvec diff=sss_h12_try-sss_h12_est;
+  const double log_lik=-sum(elem_div(elem_mult(real(diff),real(diff)),sss_h12_np_est))-sum(elem_div(elem_mult(imag(diff),imag(diff)),sss_h12_np_est));
 
   return log_lik;
 }
@@ -2809,9 +2808,9 @@ void sss_detect_ml(
   log_lik_ext=NAN;
 #endif
 
-  vec sss_h12_np_est=concat(sss_h1_np_est,sss_h2_np_est);
-  cvec sss_h12_nrm_est=concat(sss_h1_nrm_est,sss_h2_nrm_est);
-  cvec sss_h12_ext_est=concat(sss_h1_ext_est,sss_h2_ext_est);
+  const vec sss_h12_np_est=concat(sss_h1_np_est,sss_h2_np_est);
+  const cvec sss_h12_nrm_est=concat(sss_h1_nrm_est,sss_h2_nrm_est);
+  const cvec sss_h12_ext_est=concat(sss_h1_ext_est,sss_h2_ext_est);
   for (uint8 t=0;t<168;t++) {
     // Construct the SSS sequence that will be compared against the
     // received sequence.
@@ -2903,13 +2902,13 @@ Cell sss_detect(
 
   // Estimate n_id_1.
   int32 n_id_1_est;
-  double lik_final=max(ll,n_id_1_est);
+  const double lik_final=max(ll,n_id_1_est);
 
   // Second threshold check to weed out some weak signals.
   Cell cell_out(cell);
-  vec L=concat(cvectorize(log_lik_nrm),cvectorize(log_lik_ext));
-  double lik_mean=mean(L);
-  double lik_var=variance(L);
+  const vec L=concat(cvectorize(log_lik_nrm),cvectorize(log_lik_ext));
+  const double lik_mean=mean(L);
+  const double lik_var=variance(L);
   if (lik_final>=lik_mean+pow(lik_var,0.5)*thresh2_n_sigma) {
     cell_out.n_id_1=n_id_1_est;
     cell_out.cp_type=cp_type;
@@ -2939,7 +2938,7 @@ double refine_fo(
 //  cout << k_factor_vec << "\n";
 
   double freq_new = freq;
-  uint16 len_pss = length(ROM_TABLES.pss_td[0]);
+const uint16 len_pss = length(ROM_TABLES.pss_td[0]);
 
   vec fo_set(4);
   fo_set(0) = freq-3e3;
@@ -2947,7 +2946,7 @@ double refine_fo(
   fo_set(2) = freq+1e3;
   fo_set(3) = freq+3e3;
 
-  uint32 len = length(capbuf);
+const uint32 len = length(capbuf);
   double k_factor_tmp, pss_from_frame_start, pss_sp, corr_tmp;
   uint16 pss_count;
   uint32 pss_idx;
@@ -2974,20 +2973,20 @@ double refine_fo(
 
     corr_val(i) = 0;
     pss_count = 0;
-    while ( (pss_sp+len_pss+1)<=(len-1)  ) {
+    while ( pss_sp+len_pss+1<=len-1  ) {
       pss_idx = round_i(pss_sp);
 
-      chn_tmp = capbuf(pss_idx, (pss_idx+len_pss-1));
+      chn_tmp = capbuf(pss_idx, pss_idx+len_pss-1);
       tmp_val = sum(elem_mult(chn_tmp, pss_fo));
       corr_tmp = real( tmp_val*conj(tmp_val) );
       corr_val(i) = corr_val(i) + corr_tmp;
 
-      chn_tmp = capbuf(pss_idx+1, (pss_idx+1+len_pss-1));
+      chn_tmp = capbuf(pss_idx+1, pss_idx+1+len_pss-1);
       tmp_val = sum(elem_mult(chn_tmp, pss_fo));
       corr_tmp = real( tmp_val*conj(tmp_val) );
       corr_val(i) = corr_val(i) + corr_tmp;
 
-      chn_tmp = capbuf(pss_idx-1, (pss_idx-1+len_pss-1));
+      chn_tmp = capbuf(pss_idx-1, pss_idx-1+len_pss-1);
       tmp_val = sum(elem_mult(chn_tmp, pss_fo));
       corr_tmp = real( tmp_val*conj(tmp_val) );
       corr_val(i) = corr_val(i) + corr_tmp;
@@ -3003,7 +3002,7 @@ double refine_fo(
 
   DBG( cout << "refine_fo corr_val " << corr_val << "\n"; );
   DBG( cout << "fo refined from " << freq <<  " to " <<  freq_new << "\n"; );
-  return(freq_new);
+  return freq_new;
 }
 
 // Perform FOE using only the PSS and SSS.
@@ -3065,11 +3064,11 @@ Cell pss_sss_foe(
     }
     else
     {
-        pss_sss_dist=round_i((3*(128+32))*16/FS_LTE*fs_programmed*k_factor); //TDD
+        pss_sss_dist=round_i(3*(128+32)*16/FS_LTE*fs_programmed*k_factor); //TDD
         first_sss_dft_location=cell_in.frame_start+(1920-128)*16/FS_LTE*fs_programmed*k_factor; //TDD
     }
   } else {
-    throw("Error... check code...");
+    throw"Error... check code...";
   }
   uint8 sn;
   first_sss_dft_location=WRAP(first_sss_dft_location,-0.5,9600*2-0.5);
@@ -3083,7 +3082,7 @@ Cell pss_sss_foe(
   uint16 n_sss=length(sss_dft_loc_set);
 
   // Loop around for each PSS/SSS pair
-  sn=(1-(sn/10))*10;
+  sn=(1-sn/10)*10;
   complex <double> M(0,0);
   cmat h_raw_fo_pss(n_sss,62);
   cmat h_sm(n_sss,62);
@@ -3096,7 +3095,7 @@ Cell pss_sss_foe(
   pss_np=NAN;
 #endif
   for (uint16 k=0;k<n_sss;k++) {
-    sn=(1-(sn/10))*10;
+    sn=(1-sn/10)*10;
     uint32 sss_dft_location=round_i(sss_dft_loc_set(k));
 
     // Find the PSS and use it to estimate the channel.
@@ -3173,7 +3172,7 @@ void extract_tfg(
   } else if (cp_type==cp_type_t::EXTENDED) {
     dft_location=frame_start+32*16/FS_LTE*fs_programmed*k_factor;
   } else {
-    throw("Check code...");
+    throw"Check code...";
   }
 
   // See if we can advance the frame start
@@ -3182,10 +3181,10 @@ void extract_tfg(
   }
 
   // Perform FOC
-  cvec capbuf=fshift(capbuf_raw,-freq_fine,fs_programmed*k_factor);
+  const cvec capbuf=fshift(capbuf_raw,-freq_fine,fs_programmed*k_factor);
 
   // Extract 6 frames + 2 slots worth of data
-  uint16 n_ofdm_sym=6*10*2*n_symb_dl+2*n_symb_dl;
+  const uint16 n_ofdm_sym=6*10*2*n_symb_dl+2*n_symb_dl;
   tfg=cmat(n_ofdm_sym,72);
   tfg_timestamp=vec(n_ofdm_sym);
 #ifndef NDEBUG
@@ -3213,14 +3212,14 @@ void extract_tfg(
   }
 
   // Compensate for the residual time offset.
-  ivec cn=concat(itpp_ext::matlab_range(-36,-1),itpp_ext::matlab_range(1,36));
+  const ivec cn=concat(itpp_ext::matlab_range(-36,-1),itpp_ext::matlab_range(1,36));
   for (uint16 t=0;t<n_ofdm_sym;t++) {
-    double ideal_offset=tfg_timestamp(t);
-    double actual_offset=round_i(ideal_offset);
+	  const double ideal_offset=tfg_timestamp(t);
+	  const double actual_offset=round_i(ideal_offset);
     // How late were we in locating the DFT
     double late=actual_offset-ideal_offset;
     // Compensate for the improper location of the DFT
-    tfg.set_row(t,elem_mult(tfg.get_row(t),exp((-J*2*pi*late/128)*cn)));
+    tfg.set_row(t,elem_mult(tfg.get_row(t),exp(-J*2*pi*late/128*cn)));
   }
   // At this point, tfg(t,:) contains the results of a DFT that was performed
   // at time offset tfg_timestamp(t). Note that tfg_timestamp(t) is not an
@@ -3258,7 +3257,7 @@ Cell tfoec(
   // Local shortcuts
   const int8 n_symb_dl=cell.n_symb_dl();
   uint16 n_ofdm=tfg.rows();
-  uint16 n_slot=floor(((double)n_ofdm)/n_symb_dl);
+  uint16 n_slot=floor((double)n_ofdm/n_symb_dl);
 
   // Perform super-fine FOE
   complex <double> foe;
@@ -3311,7 +3310,7 @@ Cell tfoec(
     // How late were we in locating the DFT
     double late=tfg_timestamp(t)-tfg_comp_timestamp(t);
     // Compensate for the improper location of the DFT
-    tfg_comp.set_row(t,elem_mult(tfg_comp.get_row(t),exp((-J*2*pi*late/128)*cn)));
+    tfg_comp.set_row(t,elem_mult(tfg_comp.get_row(t),exp(-J*2*pi*late/128*cn)));
   }
 
   // Perform TOE.
@@ -3322,15 +3321,15 @@ Cell tfoec(
   complex <double> toe=0;
   for (uint16 t=0;t<2*n_slot-1;t++) {
     // Current OFDM symbol containing RS
-    uint8 current_sym_num=(t&1)?(n_symb_dl-3):0;
-    uint8 current_slot_num=mod((t>>1),20);
+    uint8 current_sym_num=t&1?n_symb_dl-3:0;
+    uint8 current_slot_num=mod(t>>1,20);
     uint16 current_offset=(t>>1)*n_symb_dl+current_sym_num;
     // Since we are using port 0, the shift is the same for all slots.
     uint8 current_shift=rs_dl.get_shift(0,current_sym_num,0);
     // Next OFDM symbol containing RS
-    uint8 next_sym_num=((t+1)&1)?(n_symb_dl-3):0;
-    uint8 next_slot_num=mod(((t+1)>>1),20);
-    uint16 next_offset=((t+1)>>1)*n_symb_dl+next_sym_num;
+    uint8 next_sym_num=t+1&1?n_symb_dl-3:0;
+    uint8 next_slot_num=mod(t+1>>1,20);
+    uint16 next_offset=(t+1>>1)*n_symb_dl+next_sym_num;
     // Since we are using port 0, the shift is the same for all slots.
     uint8 next_shift=rs_dl.get_shift(0,next_sym_num,0);
 
@@ -3368,7 +3367,7 @@ Cell tfoec(
   double delay=-arg(toe)/3/(2*pi/128);
 
   // Perform TOC
-  cvec comp_vector=exp((J*2*pi/128*delay)*cn);
+  cvec comp_vector=exp(J *2*pi/128*delay*cn);
   for (uint16 t=0;t<n_ofdm;t++) {
     tfg_comp.set_row(t,elem_mult(tfg_comp.get_row(t),comp_vector));
   }
@@ -3388,7 +3387,7 @@ void del_oob(
 ) {
   int32 t=0;
   while (t<v.length()) {
-    if ((v(t)<0)||(v(t)>11)) {
+    if (v(t)<0||v(t)>11) {
       v.del(t);
     } else {
       t++;
@@ -3468,13 +3467,13 @@ void ce_interp_2stage(
           n_total++;
         }
         // Left
-        if (((k-1)>>1)>=0) {
-          total+=ce_filt(t,(k-1)>>1);
+        if (k-1>>1>=0) {
+          total+=ce_filt(t,k-1>>1);
           n_total++;
         }
         // Right
-        if (((k+1)>>1)<12) {
-          total+=ce_filt(t,(k+1)>>1);
+        if (k+1>>1<12) {
+          total+=ce_filt(t,k+1>>1);
           n_total++;
         }
         ce_filt_exp(t,k)=total/n_total;
@@ -3485,7 +3484,7 @@ void ce_interp_2stage(
     }
     current_row_leftmost=!current_row_leftmost;
   }
-  ivec ce_filt_exp_x=itpp_ext::matlab_range(min(shift),3,71);
+  const ivec ce_filt_exp_x=itpp_ext::matlab_range(min(shift),3,71);
 
   // Interpolate (linearly) the uniformly sampled grid to create channel
   // estimates for every RE.
@@ -3520,7 +3519,7 @@ void ce_interp_hex_extend(
     row_x.ins(0,0);
   }
   if (itpp_ext::last(row_x)!=71) {
-    uint16 len=length(row_val);
+	  const uint16 len=length(row_val);
     row_val.ins(len,row_val(len-1)+(71-itpp_ext::last(row_x))*(row_val(len-1)-row_val(len-2))/(row_x(len-1)-row_x(len-2)));
     row_x.ins(len,71);
   }
@@ -3553,10 +3552,10 @@ void ce_interp_hex(
     // 0 and 71.
     // In general, top_row_* is actually equal to bot_row_* from the
     // previous iteration.
-    vec top_row_x=to_vec(itpp_ext::matlab_range((t&1)?shift(1):shift(0),6,71));
+    vec top_row_x=to_vec(itpp_ext::matlab_range(t&1?shift(1):shift(0),6,71));
     cvec top_row_val=ce_filt.get_row(t);
     ce_interp_hex_extend(top_row_x,top_row_val);
-    vec bot_row_x=to_vec(itpp_ext::matlab_range((t&1)?shift(0):shift(1),6,71));
+    vec bot_row_x=to_vec(itpp_ext::matlab_range(t&1?shift(0):shift(1),6,71));
     cvec bot_row_val=ce_filt.get_row(t+1);
     ce_interp_hex_extend(bot_row_x,bot_row_val);
 
@@ -3597,7 +3596,7 @@ void ce_interp_hex(
 
     // This loop succesively creates triangles to cover the space between
     // top_row and bot_row.
-    uint8 spacing=rs_set(t+1)-rs_set(t);
+    const uint8 spacing=rs_set(t+1)-rs_set(t);
     vec x_offset(spacing+1);
     x_offset=0.0;
     while (true) {
@@ -3628,12 +3627,12 @@ void ce_interp_hex(
       // Calculate the parameters of the line defining the rightmost
       // edge of the triangle.
       // x_sc=a_l*y_symnum+b_l;
-      double x1=triangle[1].x_sc;
-      double x2=triangle[2].x_sc;
-      double y1=triangle[1].y_symnum;
-      double y2=triangle[2].y_symnum;
-      double a_l=(x1-x2)/(y1-y2);
-      double b_l=(y1*x2-y2*x1)/(y1-y2);
+      const double x1=triangle[1].x_sc;
+      const double x2=triangle[2].x_sc;
+      const double y1=triangle[1].y_symnum;
+      const double y2=triangle[2].y_symnum;
+      const double a_l=(x1-x2)/(y1-y2);
+      const double b_l=(y1*x2-y2*x1)/(y1-y2);
 
       for (uint8 r=1;r<=spacing;r++) {
         while (x_offset(r)<=a_l*(rs_set(t)+r)+b_l) {
@@ -3642,7 +3641,7 @@ void ce_interp_hex(
         }
       }
 
-      if ((x_offset(1)==72)&&(itpp_ext::last(x_offset)==72)) {
+      if (x_offset(1)==72&&itpp_ext::last(x_offset)==72) {
         break;
       }
 
@@ -3727,7 +3726,7 @@ void chan_est(
     ce_raw.set_row(t,raw_row);
     // Compensate for known RS
     ce_raw.set_row(t,elem_mult(ce_raw.get_row(t),conj(rs)));
-    if (((t&1)==1)||(port>=2)) {
+    if ((t&1)==1||port>=2) {
       slot_num=mod(slot_num+1,20);
     }
   }
@@ -3804,7 +3803,7 @@ void pbch_extract(
 ) {
   // Shortcuts
   const int8 n_symb_dl=cell.n_symb_dl();
-  const uint16 m_bit=(cell.cp_type==cp_type_t::NORMAL)?1920:1728;
+  const uint16 m_bit=cell.cp_type==cp_type_t::NORMAL?1920:1728;
   const uint8 v_shift_m3=mod(cell.n_id_cell(),3);
 
   pbch_sym=cvec(m_bit/2);
@@ -3819,10 +3818,10 @@ void pbch_extract(
     for (uint8 sym=0;sym<=3;sym++) {
       for (uint8 sc=0;sc<=71;sc++) {
         // Skip if there might be an RS occupying this position.
-        if ((mod(sc,3)==v_shift_m3)&&((sym==0)||(sym==1)||((sym==3)&&(n_symb_dl==6)))) {
+        if (mod(sc,3)==v_shift_m3&&(sym==0||sym==1||(sym==3&&n_symb_dl==6))) {
           continue;
         }
-        uint16 sym_num=fr*10*2*n_symb_dl+n_symb_dl+sym;
+        const uint16 sym_num=fr*10*2*n_symb_dl+n_symb_dl+sym;
         pbch_sym(idx)=tfg(sym_num,sc);
         pbch_ce(0,idx)=ce(0).get(sym_num,sc);
         pbch_ce(1,idx)=ce(1).get(sym_num,sc);
@@ -3879,7 +3878,7 @@ Cell decode_mib(
     vec np;
     cvec syms;
     for (uint8 n_ports_pre=1;n_ports_pre<=3;n_ports_pre++) {
-      const uint8 n_ports=(n_ports_pre==3)?4:n_ports_pre;
+      const uint8 n_ports=n_ports_pre==3?4:n_ports_pre;
       // Perform channel compensation and also estimate noise power in each
       // symbol.
       if (n_ports==1) {
@@ -3941,11 +3940,11 @@ Cell decode_mib(
       // Apply CRC mask
       if (n_ports==2) {
         for (uint8 t=0;t<16;t++) {
-          crc_est(t)=1-((int)crc_est(t));
+          crc_est(t)=1-(int)crc_est(t);
         }
       } else if (n_ports==4) {
         for (uint8 t=1;t<length(crc_est);t+=2) {
-          crc_est(t)=1-((int)crc_est(t));
+          crc_est(t)=1-(int)crc_est(t);
         }
       }
       // Did we find it?

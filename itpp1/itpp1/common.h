@@ -30,14 +30,14 @@ inline std::ostream & operator<< (
   std::ostream & os,
   const uint8 & c
 ) {
-  os << ((unsigned int)c);
+  os << (unsigned int)c;
   return os;
 }
 inline std::ostream & operator<< (
   std::ostream & os,
   const int8 & c
 ) {
-  os << ((int)c);
+  os << (int)c;
   return os;
 }
 

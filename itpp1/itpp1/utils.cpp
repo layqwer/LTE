@@ -2,7 +2,6 @@
 #include <itpp/base/vec.h>
 #include <itpp/signal/transforms.h>
 #include <itpp/stat/misc_stat.h>
-#include <itpp/signal/freq_filt.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <list>
@@ -25,7 +24,7 @@ using namespace std;
 
 cvec raw2iq(const vector<int8_t> &raw)
 {
-    size_t num_samples = raw.size() / 2;
+	const size_t num_samples = raw.size() / 2;
     cvec iq(num_samples);
 
     for (size_t i = 0; i < num_samples; ++i)
@@ -39,14 +38,14 @@ cvec raw2iq(const vector<int8_t> &raw)
 // 定义 sinc 函数，模拟 MATLAB 中的 sinc 函数
 double sinc(double x)
 {
-    return (x == 0) ? 1.0 : (std::sin(x) / x);
+    return x == 0 ? 1.0 : std::sin(x) / x;
 }
 
 cvec zadoff_chu(int len, int ii)
 {
 	cvec y(len);
 	vec line = linspace(0, len - 1, len);
-	complex<double> val = -complex<double>(0, 1) * ii * M_PI / len;
+	const complex<double> val = -complex<double>(0, 1) * ii * M_PI / len;
 	if (len & 1) {
 		for (int i = 0; i < len; ++i) {
 			y[i] = exp(val * line[i] * (line[i] + 1));
@@ -66,7 +65,7 @@ cvec zadoff_chu(int len, int ii)
 
 cvec pss(int n_id_2)
 {
-    int lut[] = {25, 29, 34};
+	const int lut[] = {25, 29, 34};
     cvec y = zadoff_chu(63, lut[n_id_2]);
     y.del(31);
     return y;
@@ -88,11 +87,11 @@ void pss_gen(cmat &td_pss)
 
 cmat pss_fo_set_gen(cmat &pss, const itpp::vec &fo_search_set)
 {
-    size_t num_pss = pss.cols();
-    size_t len_pss = pss.rows();
+	const size_t num_pss = pss.cols();
+	const size_t len_pss = pss.rows();
 
-    double sampling_rate = 1.92e6;
-    size_t num_fo = fo_search_set.length();
+	const double sampling_rate = 1.92e6;
+	const size_t num_fo = fo_search_set.length();
 
     cmat pss_fo_set = zeros_c(len_pss, num_fo * num_pss);
 
@@ -104,7 +103,7 @@ cmat pss_fo_set_gen(cmat &pss, const itpp::vec &fo_search_set)
 
     for (size_t i = 0; i < num_pss; i++)
     {
-        size_t sp = i * num_fo;
+	    const size_t sp = i * num_fo;
         size_t ep = sp + num_fo - 1;
         pss_fo_set.set_submatrix(0, sp, conj(elem_mult(kron(ones_c(1, num_fo), cmat(pss.get_col(i))), exp(outer_product(tmp, to_cvec(fo_search_set))))) / len_pss);
     }
@@ -113,7 +112,7 @@ cmat pss_fo_set_gen(cmat &pss, const itpp::vec &fo_search_set)
 
 cvec shift(const cvec &vec, int len)
 {
-    int size = vec.size();
+	const int size = vec.size();
     len = (len % size + size) % size; // 处理负数位移
 
     cvec temp(size);
@@ -130,14 +129,14 @@ cvec shift(const cvec &vec, int len)
 
 mat fft_corr(cvec s, cmat &td_pss, const vec &fo_search_set)
 {
-    double sampling_rate = 1.92e6;
-    size_t len = s.size();
-    double freq_step = sampling_rate / len;
+	const double sampling_rate = 1.92e6;
+	const size_t len = s.size();
+	const double freq_step = sampling_rate / len;
 
-    size_t len_pss = td_pss.rows();
-    size_t num_pss = td_pss.cols();
-    size_t num_fo = fo_search_set.size();
-    size_t num_fo_pss = num_fo * num_pss;
+	const size_t len_pss = td_pss.rows();
+	const size_t num_pss = td_pss.cols();
+	const size_t num_fo = fo_search_set.size();
+	const size_t num_fo_pss = num_fo * num_pss;
     mat corr_store(len, num_fo_pss);
     cmat corr_store_tmp(len, num_fo_pss);
 
@@ -149,10 +148,10 @@ mat fft_corr(cvec s, cmat &td_pss, const vec &fo_search_set)
     }
     for (int i = 0; i < num_fo_pss; ++i)
     {
-        int pss_idx = floor(i / num_fo);
-        int fo_idx = i - pss_idx * num_fo;
-        double fo = fo_search_set(fo_idx);
-        double fd_fo_shift_len = fo / freq_step;
+	    const int pss_idx = floor(i / num_fo);
+	    const int fo_idx = i - pss_idx * num_fo;
+	    const double fo = fo_search_set(fo_idx);
+	    const double fd_fo_shift_len = fo / freq_step;
         corr_store_tmp.set_col(i, elem_mult(s, shift(fd_pss.get_col(pss_idx), fd_fo_shift_len)));
     }
     for (int i = 0; i < num_fo_pss; i++)
@@ -195,7 +194,7 @@ vec tshiftmy(vec &x, int t)
     if (t == floor(t))
     {
         t = mod(t, length(x));
-        int n = x.size();
+        const int n = x.size();
         // Convert negative shift to positive equivalent
         t = (t % n + n) % n;
         // Circular shift to the right
@@ -234,15 +233,15 @@ ivec mod(ivec s, int i)
 
 ivec sss(int n_id_1, int n_id_2, int slot_num)
 {
-    if ((slot_num != 0) && (slot_num != 10))
+    if (slot_num != 0 && slot_num != 10)
     {
         // cout << "slot_num must be either 0 or 10" << endl;
     }
-    int qp = floor(n_id_1 / 30);
-    int q = floor((n_id_1 + qp * (qp + 1) / 2) / 30);
-    int mp = n_id_1 + q * (q + 1) / 2;
-    int m0 = mod(mp, 31);
-    int m1 = mod(m0 + floor(mp / 31) + 1, 31);
+    const int qp = floor(n_id_1 / 30);
+    const int q = floor((n_id_1 + qp * (qp + 1) / 2) / 30);
+    const int mp = n_id_1 + q * (q + 1) / 2;
+    const int m0 = mod(mp, 31);
+    const int m1 = mod(m0 + floor(mp / 31) + 1, 31);
 
     ivec s_td = "0 0 0 0 1 0 0 1 0 1 1 0 0 1 1 1 1 1 0 0 0 1 1 0 1 1 1 0 1 0 1";
     s_td = 1 - 2 * s_td;
@@ -253,14 +252,14 @@ ivec sss(int n_id_1, int n_id_2, int slot_num)
     ivec z_td = "0 0 0 0 1 1 1 0 0 1 1 0 1 1 1 1 1 0 1 0 0 0 1 0 0 1 0 1 0 1 1";
     z_td = 1 - 2 * z_td;
 
-    ivec s0_m0 = s_td(mod(itpp_ext::matlab_range(m0, 30 + m0), 31));
-    ivec s1_m1 = s_td(mod(itpp_ext::matlab_range(m1, 30 + m1), 31));
+    const ivec s0_m0 = s_td(mod(itpp_ext::matlab_range(m0, 30 + m0), 31));
+    const ivec s1_m1 = s_td(mod(itpp_ext::matlab_range(m1, 30 + m1), 31));
 
-    ivec c0 = c_td(mod(itpp_ext::matlab_range(n_id_2, 30 + n_id_2), 31));
-    ivec c1 = c_td(mod(itpp_ext::matlab_range(n_id_2 + 3, 30 + n_id_2 + 3), 31));
+    const ivec c0 = c_td(mod(itpp_ext::matlab_range(n_id_2, 30 + n_id_2), 31));
+    const ivec c1 = c_td(mod(itpp_ext::matlab_range(n_id_2 + 3, 30 + n_id_2 + 3), 31));
 
-    ivec z1_m0 = z_td(mod(itpp_ext::matlab_range(0, 30) + mod(m0, 8), 31));
-    ivec z1_m1 = z_td(mod(itpp_ext::matlab_range(0, 30) + mod(m1, 8), 31));
+    const ivec z1_m0 = z_td(mod(itpp_ext::matlab_range(0, 30) + mod(m0, 8), 31));
+    const ivec z1_m1 = z_td(mod(itpp_ext::matlab_range(0, 30) + mod(m1, 8), 31));
     ivec s(62);
     if (slot_num == 0)
     {
@@ -334,7 +333,7 @@ void sss_detect(Cell &peak, cvec capbuf, int thresh2_n_sigma, double fc, int sam
     {
         peak_loc = peak_loc + 9600 * k_factor;
     }
-    vec pss_loc_set = itpp_ext::matlab_range((double)peak_loc, (9600 * k_factor), (double)(length(capbuf) - 125 - 9));
+    vec pss_loc_set = itpp_ext::matlab_range((double)peak_loc, 9600 * k_factor, (double)(length(capbuf) - 125 - 9));
     int n_pss = pss_loc_set.size();
     vec pss_np(n_pss);
     cmat h_raw(n_pss, 62);
@@ -503,7 +502,7 @@ void sss_detect(Cell &peak, cvec capbuf, int thresh2_n_sigma, double fc, int sam
     }
     double L_mean = mean(L);
     double L_var = variance(L);
-    if ((lik_final < L_mean + sqrt(L_var) * thresh2_n_sigma))
+    if (lik_final < L_mean + sqrt(L_var) * thresh2_n_sigma)
     {
         peak.n_id_1 = -1;
         peak.cp_type = cp_type_t::UNKNOWN;
@@ -524,18 +523,18 @@ void sss_detect(Cell &peak, cvec capbuf, int thresh2_n_sigma, double fc, int sam
 
 double refine_fo(cvec capbuf, cp_type_t::cp_type_t cp_type, int n_id_2, double freq, double fs, double frame_start, vec k_factor_vec, int &k_factor_idx)
 {
-    int len_pss = 137;
+	const int len_pss = 137;
 
     vec fo_set = "-3e3:2e3:3e3";
     fo_set = freq + fo_set;
-    int len = capbuf.length();
+	const int len = capbuf.length();
     vec corr_val(4);
     cmat td_pss_v(137, 3);
     pss_gen(td_pss_v);
     cvec td_pss = td_pss_v.get_col(n_id_2).transpose().get_row(0);
     for (size_t i = 0; i < 4; i++)
     {
-        double k_factor_tmp = k_factor_vec(i);
+	    const double k_factor_tmp = k_factor_vec(i);
         double pss_from_frame_start;
         if (cp_type_t::EXTENDED == cp_type)
         {
@@ -551,18 +550,18 @@ double refine_fo(cvec capbuf, cp_type_t::cp_type_t cp_type, int n_id_2, double f
         corr_val[i] = 0;
         int pss_count = 0;
 
-        while ((pss_sp + len_pss + 1) <= len)
+        while (pss_sp + len_pss + 1 <= len)
         {
-            double pss_idx = std::round(pss_sp);
-            cvec chn_tmp = capbuf(pss_idx, (pss_idx + len_pss - 1));
+	        const double pss_idx = std::round(pss_sp);
+            cvec chn_tmp = capbuf(pss_idx, pss_idx + len_pss - 1);
             double corr_tmp = pow(abs(sum(elem_mult(chn_tmp, pss_fo))), 2);
             corr_val(i) = corr_val(i) + corr_tmp;
 
-            chn_tmp = capbuf(pss_idx + 1, (pss_idx + 1 + len_pss - 1));
+            chn_tmp = capbuf(pss_idx + 1, pss_idx + 1 + len_pss - 1);
             corr_tmp = pow(abs(sum(elem_mult(chn_tmp, pss_fo))), 2);
             corr_val(i) = corr_val(i) + corr_tmp;
 
-            chn_tmp = capbuf(pss_idx - 1, (pss_idx - 1 + len_pss - 1));
+            chn_tmp = capbuf(pss_idx - 1, pss_idx - 1 + len_pss - 1);
             corr_tmp = pow(abs(sum(elem_mult(chn_tmp, pss_fo))), 2);
             corr_val(i) = corr_val(i) + corr_tmp;
 
@@ -645,11 +644,11 @@ void pss_sss_foe(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
     cmat sss_raw_fo = zeros_c(n_sss, 62);
     cmat h_sm = zeros_c(n_sss, 62);
     cvec pss_np(n_sss);
-    sn = (1 - (sn / 10)) * 10;
+    sn = (1 - sn / 10) * 10;
     complex<double> M(0, 0);
     for (int k = 0; k < n_sss; k++)
     {
-        sn = (1 - (sn / 10)) * 10;
+        sn = (1 - sn / 10) * 10;
         double sss_dft_location = std::round(sss_dft_loc_set(k));
 
         double pss_dft_location = sss_dft_location + pss_sss_dist;
@@ -701,7 +700,7 @@ inline cvec extract_psss(
     // Remove the 2 sample time offset
     dft_in = concat(dft_in(2, -1), dft_in.left(2));
     // DFT
-    cvec dft_out = dft(dft_in);
+    const cvec dft_out = dft(dft_in);
     // Extract interesting samples.
     return concat(dft_out.right(31), dft_out.mid(1, 31));
 }
@@ -834,9 +833,9 @@ int conv_idx(double in_idx, int decimation_ratio)
 
 void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist, int nRB, cmat &tfg, vec &tfg_timestamp)
 {
-    double frame_start = peak.frame_start;
-    cp_type_t::cp_type_t cp_type = peak.cp_type;
-    double freq_fine = peak.freq_fine;
+	const double frame_start = peak.frame_start;
+	const cp_type_t::cp_type_t cp_type = peak.cp_type;
+	const double freq_fine = peak.freq_fine;
 
     int conv_idx_ratio, decimation_ratio;
     if (nRB == 6)
@@ -850,12 +849,12 @@ void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
         decimation_ratio = 1;
     }
 
-    double fs = 30720000.0 / decimation_ratio;
-    double fft_size = 2048 / decimation_ratio;
-    double len_cp_extended = 512 / decimation_ratio;
-    double len_cp_normal1 = 144 / decimation_ratio;
-    double len_cp_normal2 = 160 / decimation_ratio;
-    int nSC = nRB * 12;
+	const double fs = 30720000.0 / decimation_ratio;
+	const double fft_size = 2048 / decimation_ratio;
+	const double len_cp_extended = 512 / decimation_ratio;
+	const double len_cp_normal1 = 144 / decimation_ratio;
+	const double len_cp_normal2 = 160 / decimation_ratio;
+	const int nSC = nRB * 12;
 
     double k_factor;
     if (sampling_carrier_twist == 1)
@@ -871,12 +870,12 @@ void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
     if (cp_type == cp_type_t::NORMAL)
     {
         n_symb_dl = 7;
-        dft_location = conv_idx(frame_start + (len_cp_normal2 / conv_idx_ratio), conv_idx_ratio);
+        dft_location = conv_idx(frame_start + len_cp_normal2 / conv_idx_ratio, conv_idx_ratio);
     }
     else if (cp_type == cp_type_t::EXTENDED)
     {
         n_symb_dl = 6;
-        dft_location = conv_idx(frame_start + (len_cp_extended / conv_idx_ratio), conv_idx_ratio);
+        dft_location = conv_idx(frame_start + len_cp_extended / conv_idx_ratio, conv_idx_ratio);
     }
     // peak.n_symb_dl = n_symb_dl;
     if (dft_location - k_factor * fs * .01 >= 0.5)
@@ -884,7 +883,7 @@ void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
         dft_location = dft_location - k_factor * fs * .01;
     }
     capbuf = fshift(capbuf, -freq_fine, fs);
-    int n_ofdm_sym = 6 * 10 * 2 * n_symb_dl + 2 * n_symb_dl;
+	const int n_ofdm_sym = 6 * 10 * 2 * n_symb_dl + 2 * n_symb_dl;
     tfg = cmat(n_ofdm_sym, fft_size);
     cmat tfg_t = cmat(n_ofdm_sym, fft_size);
     tfg_timestamp = vec(n_ofdm_sym);
@@ -911,12 +910,12 @@ void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
             sym_num = mod(sym_num + 1, 7);
         }
     }
-    tfg = concat_horizontal(tfg_t.get_cols(tfg_t.cols() -1 - ((nSC / 2) - 1), tfg_t.cols() -1), tfg_t.get_cols(1, (nSC / 2)));
-    ivec cn = concat(itpp_ext::matlab_range(-(nSC / 2), -1), itpp_ext::matlab_range(1, (nSC / 2)));
+    tfg = concat_horizontal(tfg_t.get_cols(tfg_t.cols() -1 - (nSC / 2 - 1), tfg_t.cols() -1), tfg_t.get_cols(1, nSC / 2));
+	const ivec cn = concat(itpp_ext::matlab_range(-(nSC / 2), -1), itpp_ext::matlab_range(1, nSC / 2));
     for (int t = 0; t < n_ofdm_sym; t++)
     {
-        double ideal_offset = tfg_timestamp(t);
-        double actual_offset = std::round(ideal_offset);
+	    const double ideal_offset = tfg_timestamp(t);
+	    const double actual_offset = std::round(ideal_offset);
         double late = actual_offset - ideal_offset;
         tfg.set_row(t, elem_mult(tfg.get_row(t), exp(complex<double>(0, -1) * 2 * pi * cn * late / fft_size)));
     }
@@ -924,7 +923,7 @@ void extract_tfg(Cell &peak, cvec capbuf, double fc, int sampling_carrier_twist,
 
 cvec rs_dl(int slot_num, int sym_num, int port_num, int n_id_cell, int n_rb_dl, cp_type_t::cp_type_t cp_type, int &shift)
 {
-    int n_rb_maxdl = 110;
+	const int n_rb_maxdl = 110;
     int n_symb_dl, n_cp;
     double dft_location;
 
@@ -955,12 +954,12 @@ cvec rs_dl(int slot_num, int sym_num, int port_num, int n_id_cell, int n_rb_dl, 
         }
     }
 
-    double c_init = 2 ^ 10 * (7 * (slot_num + 1) + sym_num + 1) * (2 * n_id_cell + 1) + 2 * n_id_cell + n_cp;
+	const double c_init = 2 ^ 10 * (7 * (slot_num + 1) + sym_num + 1) * (2 * n_id_cell + 1) + 2 * n_id_cell + n_cp;
     vec c = to_vec(lte_pn(c_init, 4 * n_rb_maxdl));
     cvec r_l_ns(c.length() / 2);
     for (int t = 0; t < c.length() / 2; t++)
     {
-        r_l_ns[t] = (1 / sqrt(2)) * complex<double>(1 - 2 * c[2 * t], 1 - 2 * c[2 * t + 1]);
+        r_l_ns[t] = 1 / sqrt(2) * complex<double>(1 - 2 * c[2 * t], 1 - 2 * c[2 * t + 1]);
     }
     r = r_l_ns(1 + n_rb_maxdl - n_rb_dl, 2 * n_rb_dl + n_rb_maxdl - n_rb_dl);
 
@@ -1009,17 +1008,17 @@ Cell tfoec(
     cmat &tfg_comp,
     vec &tfg_comp_timestamp)
 {
-    cout << cell <<endl;
+    // cout << cell <<endl;
     // cout << "=========================" <<endl;
-    cout << tfg <<endl;
+    // cout << tfg <<endl;
     // cout << "=========================" <<endl;
-    cout << tfg_timestamp <<endl;
+    // cout << tfg_timestamp <<endl;
     // cout << "=========================" <<endl;
 
     // Local shortcuts
     const int8 n_symb_dl = cell.n_symb_dl();
     uint16 n_ofdm = tfg.rows();
-    uint16 n_slot = floor(((double)n_ofdm) / n_symb_dl);
+    uint16 n_slot = floor((double)n_ofdm / n_symb_dl);
 
     // Perform super-fine FOE
     complex<double> foe;
@@ -1079,7 +1078,7 @@ Cell tfoec(
         // How late were we in locating the DFT
         double late = tfg_timestamp(t) - tfg_comp_timestamp(t);
         // Compensate for the improper location of the DFT
-        tfg_comp.set_row(t, elem_mult(tfg_comp.get_row(t), exp((complex<double>(0, -1) * 2 * pi * late / 128) * cn)));
+        tfg_comp.set_row(t, elem_mult(tfg_comp.get_row(t), exp(complex<double>(0, -1) * 2 * pi * late / 128 * cn)));
     }
 
     // Perform TOE.
@@ -1091,15 +1090,15 @@ Cell tfoec(
     for (uint16 t = 0; t < 2 * n_slot - 1; t++)
     {
         // Current OFDM symbol containing RS
-        uint8 current_sym_num = (t & 1) ? (n_symb_dl - 3) : 0;
-        uint8 current_slot_num = mod((t >> 1), 20);
+        uint8 current_sym_num = t & 1 ? n_symb_dl - 3 : 0;
+        uint8 current_slot_num = mod(t >> 1, 20);
         uint16 current_offset = (t >> 1) * n_symb_dl + current_sym_num;
         // Since we are using port 0, the shift is the same for all slots.
         uint8 current_shift = rs_dl.get_shift(0, current_sym_num, 0);
         // Next OFDM symbol containing RS
-        uint8 next_sym_num = ((t + 1) & 1) ? (n_symb_dl - 3) : 0;
-        uint8 next_slot_num = mod(((t + 1) >> 1), 20);
-        uint16 next_offset = ((t + 1) >> 1) * n_symb_dl + next_sym_num;
+        uint8 next_sym_num = t + 1 & 1 ? n_symb_dl - 3 : 0;
+        uint8 next_slot_num = mod(t + 1 >> 1, 20);
+        uint16 next_offset = (t + 1 >> 1) * n_symb_dl + next_sym_num;
         // Since we are using port 0, the shift is the same for all slots.
         uint8 next_shift = rs_dl.get_shift(0, next_sym_num, 0);
 
@@ -1140,7 +1139,7 @@ Cell tfoec(
     double delay = -arg(toe) / 3 / (2 * pi / 128);
 
     // Perform TOC
-    cvec comp_vector = exp((complex<double>(0, 1) * 2 * pi / 128 * delay) * cn);
+    cvec comp_vector = exp(complex<double>(0, 1) * 2 * pi / 128 * delay * cn);
     for (uint16 t = 0; t < n_ofdm; t++)
     {
         tfg_comp.set_row(t, elem_mult(tfg_comp.get_row(t), comp_vector));
@@ -1167,7 +1166,7 @@ void pbch_extract_2(
 {
     // Shortcuts
     const int8 n_symb_dl = cell.n_symb_dl();
-    const uint16 m_bit = (cell.cp_type == cp_type_t::NORMAL) ? 1920 : 1728;
+    const uint16 m_bit = cell.cp_type == cp_type_t::NORMAL ? 1920 : 1728;
     const uint8 v_shift_m3 = mod(cell.n_id_cell(), 3);
 
     pbch_sym = cvec(m_bit / 2);
@@ -1185,11 +1184,11 @@ void pbch_extract_2(
             for (uint8 sc = 0; sc <= 71; sc++)
             {
                 // Skip if there might be an RS occupying this position.
-                if ((mod(sc, 3) == v_shift_m3) && ((sym == 0) || (sym == 1) || ((sym == 3) && (n_symb_dl == 6))))
+                if (mod(sc, 3) == v_shift_m3 && (sym == 0 || sym == 1 || (sym == 3 && n_symb_dl == 6)))
                 {
                     continue;
                 }
-                uint16 sym_num = fr * 10 * 2 * n_symb_dl + n_symb_dl + sym;
+                const uint16 sym_num = fr * 10 * 2 * n_symb_dl + n_symb_dl + sym;
                 pbch_sym(idx) = tfg(sym_num, sc);
                 pbch_ce(0, idx) = ce(0).get(sym_num, sc);
                 pbch_ce(1, idx) = ce(1).get(sym_num, sc);
@@ -1207,7 +1206,7 @@ void del_oob_2(
     int32 t = 0;
     while (t < v.length())
     {
-        if ((v(t) < 0) || (v(t) > 11))
+        if (v(t) < 0 || v(t) > 11)
         {
             v.del(t);
         }
@@ -1229,7 +1228,7 @@ void ce_interp_hex_extend_2(
     }
     if (itpp_ext::last(row_x) != 71)
     {
-        uint16 len = length(row_val);
+	    const uint16 len = length(row_val);
         row_val.ins(len, row_val(len - 1) + (71 - itpp_ext::last(row_x)) * (row_val(len - 1) - row_val(len - 2)) / (row_x(len - 1) - row_x(len - 2)));
         row_x.ins(len, 71);
     }
@@ -1262,10 +1261,10 @@ void ce_interp_hex_2(
         // 0 and 71.
         // In general, top_row_* is actually equal to bot_row_* from the
         // previous iteration.
-        vec top_row_x = to_vec(itpp_ext::matlab_range((t & 1) ? shift(1) : shift(0), 6, 71));
+        vec top_row_x = to_vec(itpp_ext::matlab_range(t & 1 ? shift(1) : shift(0), 6, 71));
         cvec top_row_val = ce_filt.get_row(t);
         ce_interp_hex_extend_2(top_row_x, top_row_val);
-        vec bot_row_x = to_vec(itpp_ext::matlab_range((t & 1) ? shift(0) : shift(1), 6, 71));
+        vec bot_row_x = to_vec(itpp_ext::matlab_range(t & 1 ? shift(0) : shift(1), 6, 71));
         cvec bot_row_val = ce_filt.get_row(t + 1);
         ce_interp_hex_extend_2(bot_row_x, bot_row_val);
 
@@ -1310,7 +1309,7 @@ void ce_interp_hex_2(
 
         // This loop succesively creates triangles to cover the space between
         // top_row and bot_row.
-        uint8 spacing = rs_set(t + 1) - rs_set(t);
+        const uint8 spacing = rs_set(t + 1) - rs_set(t);
         vec x_offset(spacing + 1);
         x_offset = 0.0;
         while (true)
@@ -1342,12 +1341,12 @@ void ce_interp_hex_2(
             // Calculate the parameters of the line defining the rightmost
             // edge of the triangle.
             // x_sc=a_l*y_symnum+b_l;
-            double x1 = triangle[1].x_sc;
-            double x2 = triangle[2].x_sc;
-            double y1 = triangle[1].y_symnum;
-            double y2 = triangle[2].y_symnum;
-            double a_l = (x1 - x2) / (y1 - y2);
-            double b_l = (y1 * x2 - y2 * x1) / (y1 - y2);
+            const double x1 = triangle[1].x_sc;
+            const double x2 = triangle[2].x_sc;
+            const double y1 = triangle[1].y_symnum;
+            const double y2 = triangle[2].y_symnum;
+            const double a_l = (x1 - x2) / (y1 - y2);
+            const double b_l = (y1 * x2 - y2 * x1) / (y1 - y2);
 
             for (uint8 r = 1; r <= spacing; r++)
             {
@@ -1358,7 +1357,7 @@ void ce_interp_hex_2(
                 }
             }
 
-            if ((x_offset(1) == 72) && (itpp_ext::last(x_offset) == 72))
+            if (x_offset(1) == 72 && itpp_ext::last(x_offset) == 72)
             {
                 break;
             }
@@ -1449,7 +1448,7 @@ void chan_est_2(
         ce_raw.set_row(t, raw_row);
         // Compensate for known RS
         ce_raw.set_row(t, elem_mult(ce_raw.get_row(t), conj(rs)));
-        if (((t & 1) == 1) || (port >= 2))
+        if ((t & 1) == 1 || port >= 2)
         {
             slot_num = mod(slot_num + 1, 20);
         }
@@ -1567,7 +1566,7 @@ Cell decode_mib_2(
         cvec syms;
         for (uint8 n_ports_pre = 1; n_ports_pre <= 3; n_ports_pre++)
         {
-            const uint8 n_ports = (n_ports_pre == 3) ? 4 : n_ports_pre;
+            const uint8 n_ports = n_ports_pre == 3 ? 4 : n_ports_pre;
             // Perform channel compensation and also estimate noise power in each
             // symbol.
             if (n_ports == 1)
@@ -1643,14 +1642,14 @@ Cell decode_mib_2(
             {
                 for (uint8 t = 0; t < 16; t++)
                 {
-                    crc_est(t) = 1 - ((int)crc_est(t));
+                    crc_est(t) = 1 - (int)crc_est(t);
                 }
             }
             else if (n_ports == 4)
             {
                 for (uint8 t = 1; t < length(crc_est); t += 2)
                 {
-                    crc_est(t) = 1 - ((int)crc_est(t));
+                    crc_est(t) = 1 - (int)crc_est(t);
                 }
             }
             // Did we find it?

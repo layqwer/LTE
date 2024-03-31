@@ -25,7 +25,7 @@ double sigpower(const myType v) {
   for (int t=0;t<length(v);t++) {
     r+=pow(real(v(t)),2)+pow(imag(v(t)),2);
   }
-  return (r/length(v));
+  return r/length(v);
 }
 
 // Wrapers to properly scale fft and ifft output so that
@@ -39,7 +39,7 @@ double sigpower(const myType v) {
 // Shift vector seq up by f Hz assuming that seq was sampled at fs Hz.
 inline itpp::cvec fshift(const itpp::cvec &seq,const double f,const double fs) {
   //std::complex <double> k=std::complex<double>(0,pi*f/(fs/2));
-  double k=itpp::pi*f/(fs/2);
+  const double k=itpp::pi*f/(fs/2);
   const uint32 len=length(seq);
   itpp::cvec r(len);
   std::complex<double>coeff;
@@ -57,7 +57,7 @@ inline itpp::cvec fshift(const itpp::cvec &seq,const double f) {
 }
 inline void fshift_inplace(itpp::cvec &seq,const double f,const double fs) {
   //std::complex <double> k=std::complex<double>(0,pi*f/(fs/2));
-  double k=itpp::pi*f/(fs/2);
+  const double k=itpp::pi*f/(fs/2);
   const uint32 len=length(seq);
   std::complex<double>coeff;
   for (uint32 t=0;t<len;t++) {
@@ -99,12 +99,12 @@ void tshift(vectype &v,const double n) {
 // Convert to/from dB and linear and power values
 template <class myType>
 myType db10(const myType s) {
-  return (10*log10(s));
+  return 10*log10(s);
 }
 
 template <class myType>
 myType db20(const myType s) {
-  return (20*log10(s));
+  return 20*log10(s);
 }
 
 template <class myType>
@@ -113,7 +113,7 @@ myType udb10(const myType s) {
 
   result.set_length(length(s),false);
   for (int t=0;t<length(s);t++) {
-    result(t)=10^(s(t)/10);
+    result(t)=10^s(t)/10;
   }
 
   return result;
@@ -128,7 +128,7 @@ myType udb20(const myType s) {
 
   result.set_length(length(s),false);
   for (int t=0;t<length(s);t++) {
-    result(t)=10^(s(t)/20);
+    result(t)=10^s(t)/20;
   }
 
   return result;
@@ -170,8 +170,8 @@ itpp::Vec <T> interp1(
     uint32 try_l=0;
     uint32 try_r=length(X)-1;
     while (try_r-try_l>1) {
-      uint32 try_mid=itpp::round_i((try_r+try_l)/2.0);
-      //std::cout << try_l << " " << try_mid << " " << try_r << std::endl;
+	    const uint32 try_mid=itpp::round_i((try_r+try_l)/2.0);
+      //std::cout << try_l << " " << try_mid << " " << try_r << "\n";
       if (x(t)>=X(try_mid)) {
         try_l=try_mid;
       } else {

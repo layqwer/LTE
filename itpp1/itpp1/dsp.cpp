@@ -79,8 +79,8 @@ cvec interpft(
   }
 
   // Interpolate
-  cvec x_fd=fft(x);
-  uint32 nyqst=floor(n_x/2);
+  const cvec x_fd=fft(x);
+  const uint32 nyqst=floor(n_x/2);
   cvec y_fd_interp=concat(x_fd(0,nyqst),zeros_c(n_y-n_x),x_fd(nyqst+1,n_x-1));
 
   // Treat the nyquist sample specially when x is of even length.
@@ -94,7 +94,7 @@ cvec interpft(
   cvec y(n_y);
   uint32 idx=0;
   for (uint32 t=0;t<n_y;t++) {
-    y(t)=(((double)n_y)/n_x)*y_interp(idx);
+    y(t)=(double)n_y/n_x*y_interp(idx);
     idx+=dec_factor;
   }
 
@@ -113,12 +113,12 @@ cvec interpft(
 // 不完全伽马函数的近似计算
 double gamma_p(double a, double x, int n = 10000) {
 	double result = 0.0;
-	double h = x / n;
+	const double h = x / n;
 
 	for (int i = 0; i < n; ++i) {
-		double xi = i * h;
-		double xi_1 = (i + 1) * h;
-		result += (std::pow(xi, a - 1) * std::exp(-xi)) + (std::pow(xi_1, a - 1) * std::exp(-xi_1));
+		const double xi = i * h;
+		const double xi_1 = (i + 1) * h;
+		result += std::pow(xi, a - 1) * std::exp(-xi) + std::pow(xi_1, a - 1) * std::exp(-xi_1);
 	}
 
 	result *= h / 2.0;
